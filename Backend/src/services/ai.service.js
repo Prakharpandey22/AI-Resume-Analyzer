@@ -374,8 +374,13 @@ REQUIREMENTS:
         const parsed = JSON.parse(rawText);
         const validated = resumePdfSchema.parse(parsed);
 
-        const pdfBuffer = await generatePdfFromHtml(validated.html);
-        return pdfBuffer;
+        try {
+            const pdfBuffer = await generatePdfFromHtml(validated.html);
+            return { pdfBuffer, contentType: "application/pdf" };
+        } catch (puppeteerError) {
+            console.warn("⚠️ Puppeteer failed on cloud environment, serving formatted HTML resume:", puppeteerError.message);
+            return { html: validated.html, contentType: "text/html" };
+        }
     } catch (error) {
         console.error("❌ Error generating resume PDF:", error);
         throw error;
