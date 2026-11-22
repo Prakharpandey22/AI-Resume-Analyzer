@@ -44,13 +44,15 @@ const token = jwt.sign(
     { expiresIn: "1d"}
 )
 
-// auth.controller.js
-res.cookie("token", token, {
+const isProduction = process.env.NODE_ENV === "production";
+const cookieOptions = {
     httpOnly: true,
-    secure: false, // Localhost (HTTP) par false hi rakhein
-    sameSite: "lax", // Ya agar issue rahe toh sameSite: "none", secure: true (HTTPS par)
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 1000 // 1 day
-});
+};
+
+res.cookie("token", token, cookieOptions);
 
 res.status(201).json({
     message: "User registered successfully",
@@ -94,7 +96,15 @@ const token = jwt.sign(
     { expiresIn: "1d"}
 )
 
-res.cookie("token", token)
+const isProduction = process.env.NODE_ENV === "production";
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000
+};
+
+res.cookie("token", token, cookieOptions);
 res.status(200).json({
     message:"User logged in successfully",
     user:{
@@ -119,7 +129,12 @@ async function logoutUserController(req,res){
           await tokenBlackListModel.create({token})
     }
 
-    res.clearCookie("token")
+    const isProduction = process.env.NODE_ENV === "production";
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax"
+    })
 
     res.status(200).json({
         message: "User logged out successfully"
