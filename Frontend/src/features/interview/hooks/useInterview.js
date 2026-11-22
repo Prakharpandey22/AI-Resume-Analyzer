@@ -89,17 +89,29 @@ export const useInterview = ()=>{
                 document.body.removeChild(link)
                 window.URL.revokeObjectURL(url)
             } else {
-                const htmlText = await response.text()
+                const text = await response.text()
+                // Check if the response is actually a JSON error message
+                try {
+                    const errorJson = JSON.parse(text)
+                    if (errorJson.message) {
+                        if (printWindow) printWindow.close()
+                        alert("Error: " + errorJson.message)
+                        return
+                    }
+                } catch {
+                    // Not JSON, it is the actual valid HTML resume!
+                }
+
                 if (printWindow) {
                     printWindow.document.open()
-                    printWindow.document.write(htmlText)
+                    printWindow.document.write(text)
                     printWindow.document.close()
                     printWindow.focus()
                     setTimeout(() => {
                         printWindow.print()
                     }, 500)
                 } else {
-                    const url = window.URL.createObjectURL(new Blob([ htmlText ], { type: "text/html" }))
+                    const url = window.URL.createObjectURL(new Blob([ text ], { type: "text/html" }))
                     const link = document.createElement("a")
                     link.href = url
                     link.setAttribute("download", `resume_${interviewReportId}.html`)
